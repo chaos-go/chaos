@@ -5,6 +5,7 @@ import "errors"
 // Router can handle events itself or route them to other subRouters.
 type Router struct {
 	Name         string
+	added        bool
 	subRouters   []*Router
 	parentRouter *Router
 }
@@ -15,6 +16,12 @@ type Dispatcher struct {
 
 // Include includes a router into another router.
 func (parentRouter *Router) Include(childRouter *Router) error {
+	if parentRouter.added {
+		return errors.New("already included")
+	}
+	if parentRouter == childRouter {
+		return errors.New("can't add a router into itself")
+	}
 	currentRouter := *parentRouter
 	for {
 		if currentRouter.parentRouter == nil {
@@ -30,6 +37,7 @@ func (parentRouter *Router) Include(childRouter *Router) error {
 	childRouter.parentRouter = parentRouter
 	newRouters := append(parentRouter.subRouters, childRouter)
 	parentRouter.subRouters = newRouters
+	parentRouter.added = true
 	return nil
 }
 
